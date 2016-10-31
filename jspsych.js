@@ -874,8 +874,8 @@ jsPsych.data = (function() {
   // ignored data fields
   var ignoredProperties = [];
 
-  // cache the query_string
-  var query_string;
+  // cache the query_strings
+  var query_strings = {};
 
   module.getData = function(filters) {
     var data_clone = $.extend(true, [], allData); // deep clone
@@ -1060,18 +1060,18 @@ jsPsych.data = (function() {
     $('#jspsych-data-display').text(data_string);
   };
 
-  module.urlVariables = function() {
-    if(typeof query_string == 'undefined'){
-      query_string = getQueryString();
+  module.urlVariables = function(url) {
+    // default url is window location
+    url = (typeof url === 'undefined') ? window.location : url;
+    
+    if(typeof query_strings[url] === 'undefined'){
+      query_strings[url] = getQueryString(url);
     }
-    return query_string;
+    return query_strings[url];
   }
 
-  module.getURLVariable = function(whichvar){
-    if(typeof query_string == 'undefined'){
-      query_string = getQueryString();
-    }
-    return query_string[whichvar];
+  module.getURLVariable = function(whichvar, url) {
+    return module.urlVariables(url)[whichvar];
   }
 
   module.createInteractionListeners = function(){
@@ -1187,21 +1187,27 @@ jsPsych.data = (function() {
   }
 
   // this function is modified from StackOverflow:
-  // http://stackoverflow.com/posts/3855394
+  // http://stackoverflow.com/a/3855394
 
-  function getQueryString() {
-    var a = window.location.search.substr(1).split('&');
-    if (a == "") return {};
-    var b = {};
-    for (var i = 0; i < a.length; ++i)
+  function getQueryString(url) {
+    // no url given
+    if (typeof url === 'undefined') return {};
+    // query part starts after &
+    var query = url.search.substr(1).split('&');
+    // no query part
+    if (query == '') return {};
+    
+    // build parameter object
+    var params = {};
+    for (var i = 0; i < query.length; ++i)
     {
-        var p=a[i].split('=', 2);
+        var p=query[i].split('=', 2);
         if (p.length == 1)
-            b[p[0]] = "";
+            params[p[0]] = '';
         else
-            b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+            params[p[0]] = decodeURIComponent(p[1].replace(/\+/g, ' '));
     }
-    return b;
+    return params;
   }
 
   return module;
@@ -1212,44 +1218,36 @@ jsPsych.turk = (function() {
 
   var module = {};
 
-  // core.turkInfo gets information relevant to mechanical turk experiments. returns an object
+  // module.info gets information relevant to mechanical turk experiments. returns an object
   // containing the workerID, assignmentID, and hitID, and whether or not the HIT is in
   // preview mode, meaning that they haven't accepted the HIT yet.
-  module.turkInfo = function() {
+  module.info = function() {
 
     var turk = {};
 
-    var param = function(url, name) {
-      name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
-      var regexS = "[\\?&]" + name + "=([^&#]*)";
-      var regex = new RegExp(regexS);
-      var results = regex.exec(url);
-      return (results == null) ? "" : results[1];
-    };
+    // create referrer as anchor element to support .search property in data.getQueryString()
+    var referrer_anchor = document.createElement('a');
+    referrer_anchor.href = document.referrer;
+    
+    var src = jsPsych.data.getURLVariable('assignmentId', window.location) ? window.location : referrer_anchor;
 
-    var src = param(window.location.href, "assignmentId") ? window.location.href : document.referrer;
+    var keys = ['assignmentId', 'hitId', 'workerId', 'turkSubmitTo'];
+    keys.map(function(key) {
+      turk[key] = jsPsych.data.getURLVariable(key, src);
+    });
 
-    var keys = ["assignmentId", "hitId", "workerId", "turkSubmitTo"];
-    keys.map(
+    turk.previewMode = (turk.assignmentId == 'ASSIGNMENT_ID_NOT_AVAILABLE');
 
-      function(key) {
-        turk[key] = unescape(param(src, key));
-      });
-
-    turk.previewMode = (turk.assignmentId == "ASSIGNMENT_ID_NOT_AVAILABLE");
-
-    turk.outsideTurk = (!turk.previewMode && turk.hitId === "" && turk.assignmentId == "" && turk.workerId == "")
-
-    turk_info = turk;
+    turk.usingTurk = (turk.hitId && turk.assignmentId && turk.workerId);
 
     return turk;
 
   };
 
-  // core.submitToTurk will submit a MechanicalTurk ExternalHIT type
-  module.submitToTurk = function(data) {
+  // module.submit will submit a MechanicalTurk ExternalHIT type
+  module.submit = function(data) {
 
-    var turkInfo = jsPsych.turk.turkInfo();
+    var turkInfo = jsPsych.turk.info();
     var assignmentId = turkInfo.assignmentId;
     var turkSubmitTo = turkInfo.turkSubmitTo;
 
@@ -1258,15 +1256,67 @@ jsPsych.turk = (function() {
     var dataString = [];
 
     for (var key in data) {
-
       if (data.hasOwnProperty(key)) {
-        dataString.push(key + "=" + escape(data[key]));
+        dataString.push(key + "=" + encodeURIComponent(data[key]));
       }
     }
 
-    dataString.push("assignmentId=" + assignmentId);
+    dataString.push('assignmentId=' + assignmentId);
 
-    var url = turkSubmitTo + "/mturk/externalSubmit?" + dataString.join("&");
+    var url = turkSubmitTo + '/mturk/externalSubmit?' + dataString.join('&');
+
+    window.location.href = url;
+  };
+
+  return module;
+
+})();
+
+// Prolific Academic integration
+jsPsych.prolific = (function() {
+
+  var module = {};
+
+  // module.info gets information relevant to prolific academic experiments.
+  // returns an object containing the participantId and sessionId
+  module.info = function() {
+
+    var prolific = {};
+
+    // create referrer as anchor element to support .search property in data.getQueryString()
+    var referrer_anchor = document.createElement('a');
+    referrer_anchor.href = document.referrer;
+    // pull parameters from different urls
+    var sources = [referrer_anchor, window.location];
+    var keys = ['participant', 'session', 'study', 'study_id'];
+    for(var i = 0; i < sources.length; i++) {
+      keys.map(function(key) {
+        var val = jsPsych.data.getURLVariable(key, sources[i]);
+        if(val || !prolific.hasOwnProperty(key)) {
+          prolific[key] = val;
+        }
+      });
+    }
+
+    // use study instead of study_id as key
+    if(!prolific.study) {
+      prolific.study = prolific.study_id;
+    }
+    delete prolific.study_id;
+    
+    prolific.usingProlific = (prolific.participant && prolific.session && prolific.study);
+    
+    return prolific;
+
+  };
+
+  // module.submit will complete the submission on prolific academic.
+  module.submit = function(code) {
+
+    var info = jsPsych.prolific.info();
+    if(!info.hasOwnProperty('study')) return;
+
+    var url = '//www.prolific.ac/submissions/' + info.study + '/complete?cc=' + code;
 
     window.location.href = url;
   };
