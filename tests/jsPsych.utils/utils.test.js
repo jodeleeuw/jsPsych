@@ -1,6 +1,10 @@
-const root = '../../';
+/**
+ * @jest-environment jsdom
+ */
 
-require(root + 'jspsych.js');
+const root = '../../build/';
+var jsPsych = require(root + 'jspsych.js');
+window.jsPsych = jsPsych
 
 describe('unique', function(){
   test('generates unique array when there are duplicates', function(){

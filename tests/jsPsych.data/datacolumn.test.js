@@ -1,6 +1,9 @@
-const root = '../../';
+/**
+ * @jest-environment jsdom
+ */
+const root = '../../build/';
 
-require(root + 'jspsych.js');
+var jsPsych = require(root + 'jspsych.js');
 
 var data = [
   {rt: 100, filter: true},

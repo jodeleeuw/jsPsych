@@ -1,4 +1,9 @@
-const root = '../../';
+/**
+ * @jest-environment jsdom
+ */
+const root = '../../build/';
+var jsPsych = require(root + 'jspsych.js');
+window.jsPsych = jsPsych
 
 jest.useFakeTimers();
 

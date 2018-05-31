@@ -2,12 +2,13 @@
   "name": "jspsych",
   "version": "6.0.0",
   "description": "Behavioral experiments in a browser",
-  "main": "jspsych.js",
+  "main": "build/jspsych.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "gulp umd"
   },
   "repository": {
     "type": "git",
@@ -20,10 +21,16 @@
   },
   "homepage": "https://github.com/jodeleeuw/jsPsych#readme",
   "devDependencies": {
-    "jest": "^22.0.3"
+    "gulp": "^3.9.1",
+    "gulp-umd": "^2.0.0",
+    "jest": "^22.0.3",
+    "jest-environment-jsdom": "^22.4.3",
+    "jest-environment-jsdom-global": "^1.0.3",
+    "umd-templates": "^0.0.3"
   },
   "jest": {
     "resetModules": true,
+    "testEnvironment": "jest-environment-jsdom-global",
     "testEnvironmentOptions": {
       "fetchExternalResources": true,
       "pretendToBeVisual": true

@@ -1,12 +1,15 @@
-const root = '../../';
-const utils = require('../testing-utils.js');
+/**
+ * @jest-environment jsdom
+ */
+const root = '../../build/';
+var jsPsych = require(root + 'jspsych.js');
+window.jsPsych = jsPsych
 
 jest.useFakeTimers();
 
 describe('categorize-image plugin', function(){
 
 	beforeEach(function(){
-		require(root + 'jspsych.js');
 		require(root + 'plugins/jspsych-categorize-image.js');
 	});
 

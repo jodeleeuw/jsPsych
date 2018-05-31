@@ -1,11 +1,15 @@
-const root = '../../';
+/**
+ * @jest-environment jsdom
+ */
+const root = '../../build/';
+var jsPsych = require(root + 'jspsych.js');
+window.jsPsych = jsPsych
 
 jest.useFakeTimers();
 
 describe('call-function plugin', function(){
 
 	beforeEach(function(){
-		require(root + 'jspsych.js');
 		require(root + 'plugins/jspsych-call-function.js');
 	});
 

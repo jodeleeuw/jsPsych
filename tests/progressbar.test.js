@@ -1,12 +1,21 @@
-const root = '../';
+/**
+ * @jest-environment jsdom
+ */
+
+const root = '../build/';
+var jsPsych = require(root + 'jspsych.js');
+window.jsPsych  = jsPsych;
 const utils = require('./testing-utils.js');
 
+var plugin;
 beforeEach(function(){
-  require(root + 'jspsych.js');
-  require(root + 'plugins/jspsych-html-keyboard-response.js');
+  plugin = require(root + 'plugins/jspsych-html-keyboard-response.js');
 });
 
 describe('automatic progress bar', function(){
+  test('the plugin is added to the jsPsych object', function() {
+    expect(Object.keys(window.jsPsych.plugins)).toContain('html-keyboard-response')
+  })
 
   test('progress bar does not display by default', function(){
     var trial = {

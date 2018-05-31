@@ -1,11 +1,16 @@
-const root = '../../';
+/**
+ * @jest-environment jsdom
+ */
+
+const root = '../../build/';
+var jsPsych = require(root + 'jspsych.js');
+window.jsPsych = jsPsych
 
 jest.useFakeTimers();
 
 describe('animation plugin', function(){
 
 	beforeEach(function(){
-		require(root + 'jspsych.js');
 		require(root + 'plugins/jspsych-animation.js');
 	});
 

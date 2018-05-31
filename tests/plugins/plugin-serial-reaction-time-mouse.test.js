@@ -1,12 +1,15 @@
+/**
+ * @jest-environment jsdom
+ */
+const root = '../../build/';
+var jsPsych = require(root + 'jspsych.js');
+window.jsPsych = jsPsych
 const utils = require('../testing-utils.js');
-const root = '../../';
-
 jest.useFakeTimers();
 
 describe('serial-reaction-time-mouse plugin', function(){
 
 	beforeEach(function(){
-		require(root + 'jspsych.js');
 		require(root + 'plugins/jspsych-serial-reaction-time-mouse.js');
 	});
 
