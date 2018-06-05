@@ -231,13 +231,26 @@ window.jsPsych = (function() {
     // of the DataCollection, for easy access and editing.
     var trial_data_values = trial_data.values()[0];
 
+    // allow the callbacks to force a repeat of the current trial by returning false
+    var repeat = false;
     // handle callback at plugin level
     if (typeof current_trial.on_finish === 'function') {
-      current_trial.on_finish(trial_data_values);
+      if(current_trial.on_finish(trial_data_values) === false)
+        current_trial_finished = false;
     }
 
     // handle callback at whole-experiment level
-    opts.on_trial_finish(trial_data_values);
+    if(opts.on_trial_finish(trial_data_values) === false)
+      current_trial_finished = false;
+
+    // set the next trial function appropriately for repeats/next trial
+    var doNext
+    if(current_trial_finished === false) {
+      doNext = repeatTrial;
+      jsPsych.data.unwrite();
+    } else
+      doNext = nextTrial;
+
 
     // after the above callbacks are complete, then the data should be finalized
     // for this trial. call the on_data_update handler, passing in the same
@@ -247,15 +260,15 @@ window.jsPsych = (function() {
     // wait for iti
     if (typeof current_trial.post_trial_gap === null) {
       if (opts.default_iti > 0) {
-        setTimeout(nextTrial, opts.default_iti);
+        setTimeout(doNext, opts.default_iti);
       } else {
-        nextTrial();
+        doNext();
       }
     } else {
       if (current_trial.post_trial_gap > 0) {
-        setTimeout(nextTrial, current_trial.post_trial_gap);
+        setTimeout(doNext, current_trial.post_trial_gap);
       } else {
-        nextTrial();
+        doNext();
       }
     }
   }
@@ -795,6 +808,18 @@ window.jsPsych = (function() {
     doTrial(timeline.trial());
   }
 
+  function repeatTrial() {
+      // if experiment is paused, don't do anything.
+      if(paused) {
+          waiting = true;
+          return;
+      }
+
+      timeline.advance();
+
+      doTrial(timeline.trial());
+  }
+
   function doTrial(trial) {
 
     current_trial = trial;
@@ -1036,6 +1061,10 @@ jsPsych.data = (function() {
     data_collection.push = function(new_data){
       trials.push(new_data);
       return data_collection;
+    }
+
+    data_collection.pop = function() {
+      return trials.pop();
     }
 
     data_collection.join = function(other_data_collection){
@@ -1332,6 +1361,10 @@ jsPsych.data = (function() {
     var ext_data_object = Object.assign({}, data_object, trial.data, default_data, dataProperties);
 
     allData.push(ext_data_object);
+  };
+
+  module.unwrite = function() {
+    return allData.pop();
   };
 
   module.addProperties = function(properties) {
