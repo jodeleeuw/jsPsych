@@ -1,25 +1,23 @@
 {
-  "name": "jspsych",
-  "version": "6.1.0",
-  "description": "Behavioral experiments in a browser",
-  "main": "jspsych.js",
-  "directories": {
-    "doc": "docs"
-  },
+  "name": "pushkin-jspsych",
+  "version": "1.0.1",
+  "description": "A version of jsPsych designed to be imported and reassigned manually to window.jsPsych",
+  "main": "build/jspsych.js",
+  "files": [
+    "build/*"
+  ],
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "babel src -d build"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jodeleeuw/jsPsych.git"
-  },
-  "author": "Josh de Leeuw",
+  "author": "L3",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/jodeleeuw/jsPsych/issues"
-  },
-  "homepage": "https://github.com/jodeleeuw/jsPsych#readme",
   "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.4.0",
+    "@babel/preset-env": "^7.4.1",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.15.3",
     "jest": "^24.8"
   },
   "jest": {
