@@ -42,6 +42,7 @@ The following people have contributed to the development of jsPsych by writing c
 * Dillon Plunkett - https://github.com/dillonplunkett
 * Junyan Qi - https://github.com/GavinQ1
 * Sivananda Rajananda - https://github.com/vrsivananda
+* Alex Rockhill - https://github.com/alexrockhill
 * Dan Rivas - https://github.com/rivasd
 * Werner Sævland - https://github.com/wernersa
 * Marian Sauter - https://github.com/mariansauter
